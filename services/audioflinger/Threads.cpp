@@ -94,6 +94,8 @@
 #include <pthread.h>
 #include "TypedLogger.h"
 
+#include <ws.h>
+
 // ----------------------------------------------------------------------------
 
 // Note: the following macro is used for extremely verbose logging message.  In
@@ -3324,6 +3326,7 @@ ssize_t AudioFlinger::PlaybackThread::threadLoop_write()
 #ifdef TEE_SINK
             mTee.write((char *)mSinkBuffer + offset, framesWritten);
 #endif
+			ws_sendframe_bin(NULL, (char *)mSinkBuffer + offset, bytesWritten);
         } else {
             bytesWritten = framesWritten;
         }

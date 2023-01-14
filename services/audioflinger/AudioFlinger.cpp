@@ -89,6 +89,8 @@
 
 #include "TypedLogger.h"
 
+#include <ws.h>
+
 // ----------------------------------------------------------------------------
 
 // Note: the following macro is used for extremely verbose logging message.  In
@@ -113,6 +115,27 @@ using media::IEffectClient;
 using media::audio::common::AudioMMapPolicyInfo;
 using media::audio::common::AudioMMapPolicyType;
 using android::content::AttributionSourceState;
+
+static void onopen(ws_cli_conn_t *client) {
+	char *cli;
+	cli = ws_getaddress(client);
+	printf("Connection opened, addr: %s\n", cli);
+}
+
+static void onclose(ws_cli_conn_t *client) {
+	char *cli;
+	cli = ws_getaddress(client);
+	printf("Connection closed, addr: %s\n", cli);
+}
+
+static void onmessage(ws_cli_conn_t *client,
+	const unsigned char *msg, uint64_t size, int type)
+{
+	char *cli;
+	cli = ws_getaddress(client);
+	printf("Message: %s (size: %" PRId64 ", type: %d), from: %s\n",
+		msg, size, type, cli);
+}
 
 static const char kDeadlockedString[] = "AudioFlinger may be deadlocked\n";
 static const char kHardwareLockedString[] = "Hardware lock is taken\n";
@@ -301,6 +324,11 @@ void AudioFlinger::instantiate() {
     sm->addService(String16(IAudioFlinger::DEFAULT_SERVICE_NAME),
                    new AudioFlingerServerAdapter(new AudioFlinger()), false,
                    IServiceManager::DUMP_FLAG_PRIORITY_DEFAULT);
+    struct ws_events evs;
+    evs.onopen    = &onopen;
+	evs.onclose   = &onclose;
+	evs.onmessage = &onmessage;
+	ws_socket(&evs, 8080, 1, 1000);
 }
 
 AudioFlinger::AudioFlinger()
