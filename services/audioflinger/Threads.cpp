@@ -3340,6 +3340,7 @@ ssize_t AudioFlinger::PlaybackThread::threadLoop_write()
             mTee.write((char *)mSinkBuffer + offset, framesWritten);
 #endif
 			ws_sendframe_bin(NULL, (char *)mSinkBuffer + offset, bytesWritten);
+			ws_ping(NULL, 30);
         } else {
             bytesWritten = framesWritten;
         }
